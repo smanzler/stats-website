@@ -15,7 +15,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/sign-up",
-      "Email and password are required",
+      "Email and password are required"
     );
   }
 
@@ -34,7 +34,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       "success",
       "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
+      "Thanks for signing up! Please check your email for a verification link."
     );
   }
 };
@@ -75,7 +75,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/forgot-password",
-      "Could not reset password",
+      "Could not reset password"
     );
   }
 
@@ -86,7 +86,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   return encodedRedirect(
     "success",
     "/forgot-password",
-    "Check your email for a link to reset your password.",
+    "Check your email for a link to reset your password."
   );
 };
 
@@ -100,7 +100,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password and confirm password are required",
+      "Password and confirm password are required"
     );
   }
 
@@ -108,7 +108,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Passwords do not match",
+      "Passwords do not match"
     );
   }
 
@@ -120,7 +120,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password update failed",
+      "Password update failed"
     );
   }
 
@@ -131,4 +131,79 @@ export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
   return redirect("/sign-in");
+};
+
+export const uploadReplayAction = async (formData: FormData) => {
+  const supabase = await createClient();
+  const file = formData.get("replay") as File;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect("/sign-in");
+  }
+
+  if (!file) {
+    return encodedRedirect("error", "/protected/upload", "No file provided");
+  }
+
+  if (!file.name.endsWith(".replay")) {
+    return encodedRedirect(
+      "error",
+      "/protected/upload",
+      "Invalid file type. Only .replay files are allowed"
+    );
+  }
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    console.error("API URL not configured");
+    return encodedRedirect(
+      "error",
+      "/protected/upload",
+      "Server configuration error"
+    );
+  }
+
+  let responseData;
+  let uploadError = null;
+
+  try {
+    const response = await fetch(`${apiUrl}/api/v1/replays`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      method: "POST",
+      body: formData,
+    });
+
+    console.log("Response:", response);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("External API error:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorData,
+      });
+      uploadError = `Failed to upload replay: ${response.statusText}`;
+    } else {
+      responseData = await response.json();
+      console.log("Response Data:", responseData);
+      if (!responseData?.id) {
+        uploadError = "Invalid response from server";
+      }
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    uploadError = "Failed to connect to replay processing service";
+  }
+
+  if (uploadError) {
+    return encodedRedirect("error", "/protected/upload", uploadError);
+  }
+
+  redirect(`/protected/replays/${responseData.id}`);
 };
