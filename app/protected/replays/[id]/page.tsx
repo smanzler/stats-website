@@ -165,9 +165,10 @@ async function getReplayDetails(id: string): Promise<ReplayDetails | null> {
 export default async function ReplayDetails({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const replay = await getReplayDetails(params.id);
+  const { id } = await params;
+  const replay = await getReplayDetails(id);
 
   if (!replay) {
     notFound();
