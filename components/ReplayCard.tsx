@@ -37,7 +37,7 @@ export function ReplayCard({ replay }: { replay: ReplayProps }) {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    return `${minutes}:${remainingSeconds.toFixed(2).toString().padStart(2, "0")}`;
   };
 
   const blueTeam = replay.player_stats.filter((player) => player.team === 0);
