@@ -1,4 +1,18 @@
+import { Suspense } from "react";
 import UploadReplayForm from "@/components/upload-replay-form";
+
+function UploadFormSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-10 w-full max-w-sm rounded-md bg-muted/70"></div>
+      <div className="space-y-2">
+        <div className="h-4 w-24 rounded bg-muted/70"></div>
+        <div className="h-10 w-full max-w-sm rounded-md bg-muted/70"></div>
+      </div>
+      <div className="h-10 w-32 rounded-md bg-primary/30"></div>
+    </div>
+  );
+}
 
 export default async function UploadReplay() {
   return (
@@ -11,7 +25,9 @@ export default async function UploadReplay() {
           Upload your .replay file to analyze your game
         </p>
       </div>
-      <UploadReplayForm />
+      <Suspense fallback={<UploadFormSkeleton />}>
+        <UploadReplayForm />
+      </Suspense>
     </div>
   );
 }
