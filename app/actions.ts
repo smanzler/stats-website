@@ -179,8 +179,6 @@ export const uploadReplayAction = async (formData: FormData) => {
       body: formData,
     });
 
-    console.log("Response:", response);
-
     if (!response.ok) {
       const errorData = await response.text();
       console.error("External API error:", {
@@ -191,7 +189,6 @@ export const uploadReplayAction = async (formData: FormData) => {
       uploadError = `Failed to upload replay: ${response.statusText}`;
     } else {
       responseData = await response.json();
-      console.log("Response Data:", responseData);
       if (!responseData?.id) {
         uploadError = "Invalid response from server";
       }
